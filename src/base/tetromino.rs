@@ -3,7 +3,7 @@ use rand::Rng;
 use crate::base::tetromino::TetrominoState::Up;
 
 type Matrix = [[bool; 4]; 4];
-type Info = ([Matrix; 4], Color);
+type Info = ([Matrix; 4], Color, Color);
 
 
 enum TetrominoState {
@@ -13,7 +13,7 @@ enum TetrominoState {
     Left,
 }
 
-pub enum TetrominoType {
+enum TetrominoType {
     I,
     O,
     T,
@@ -34,7 +34,7 @@ pub struct Tetromino {
 
 //const info
 impl Tetromino {
-    const I: Info = (
+    pub const I: Info = (
         [
             [
                 [false, false, false, false],
@@ -61,7 +61,8 @@ impl Tetromino {
                 [false, true, false, false],
             ],
         ],
-        Color::Cyan,
+        Color::Rgb { r: 0, g: 240, b: 240 },
+        Color::Rgb { r: 0, g: 160, b: 160 }
     );
     const O: Info = (
         [
@@ -90,7 +91,8 @@ impl Tetromino {
                 [false, false, false, false],
             ],
         ],
-        Color::Yellow,
+        Color::Rgb { r:240,g: 240,b: 0 },
+        Color::Rgb { r:160, g: 160, b:0 }
     );
     const J: Info = (
         [
@@ -119,7 +121,8 @@ impl Tetromino {
                 [false, false, false, false],
             ],
         ],
-        Color::Blue,
+        Color::Rgb {r: 0,g:  0, b:240 },
+        Color::Rgb { r:0,g:  0,b:160 }
     );
     const L: Info = (
         [
@@ -148,7 +151,8 @@ impl Tetromino {
                 [false, false, false, false],
             ],
         ],
-        Color::DarkYellow,
+        Color::Rgb {r: 240, g: 160,b: 0 },
+        Color::Rgb { r:160,g:  120, b:0 }
     );
     const S: Info = (
         [
@@ -177,7 +181,8 @@ impl Tetromino {
                 [false, false, false, false],
             ],
         ],
-        Color::Green,
+        Color::Rgb { r:0, g: 240,b: 0 },
+        Color::Rgb { r:0, g: 160, b:0 }
     );
     const T: Info = (
         [
@@ -206,7 +211,8 @@ impl Tetromino {
                 [false, false, false, false],
             ],
         ],
-        Color::Magenta,
+        Color::Rgb { r:60,g: 0, b:240 },
+        Color::Rgb { r:120,g:  0, b:160 }
     );
     const Z: Info = (
         [
@@ -235,9 +241,11 @@ impl Tetromino {
                 [false, false, false, false],
             ],
         ],
-        Color::Red,
+        Color::Rgb {r: 240, g: 0, b:0 },
+        Color::Rgb {r: 160,g:  0, b:0 }
     );
 }
+
 impl Tetromino {
-    fn new() -> ! {panic!("Tetromino must be initialized with a type")}
+    fn new() -> ! { panic!("Tetromino must be initialized with a type") }
 }
