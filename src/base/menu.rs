@@ -16,7 +16,7 @@ const TITLE: &str =
 
 
 pub fn show_menu(out: &mut impl Write) -> io::Result<()> {
-    draw_frame(out)?;
+    draw_menu_frame(out)?;
     //Menu
     queue!(out,cursor::MoveTo(15,15))?;
     draw_menu(out,0)?;
@@ -124,7 +124,7 @@ impl MenuOption {
     const MENU_STR: [&'static str; 4] = ["𝔾𝕒𝕞𝕖 𝕊𝕥𝕒𝕣𝕥", "𝕊𝕖𝕥𝕥𝕚𝕟𝕘𝕤", "𝔸𝕓𝕠𝕦𝕥", "ℚ𝕦𝕚𝕥"];
 }
 
-fn draw_frame (out: &mut impl Write) -> io::Result<()>{
+fn draw_menu_frame(out: &mut impl Write) -> io::Result<()>{
     draw_block(out)?;
     //Title
     queue!(out,cursor::MoveTo(5,2))?;

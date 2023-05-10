@@ -2,19 +2,13 @@ use crossterm::{cursor, execute, queue, style, style::Color, style::SetBackgroun
 use base::tetromino;
 use std::io::{stdout, Write};
 use crossterm::style::Print;
+use crate::base::tetromino::Tetromino;
 
 mod base;
 
 const MENU: &str = r#"Tetris
    "#;
 
-type PointState = Option<Color>;
-
-struct Matrix {
-    data: Vec<Vec<PointState>>,
-    width: usize,
-    height: usize,
-}
 
 
 fn main() -> Result<()> {
@@ -26,7 +20,7 @@ fn main() -> Result<()> {
         let opt = base::menu::select(&mut stdout)?;
         match opt {
             MenuOption::Start => {
-                panic!("Not implemented yet")
+                base::game::start(&mut stdout);
             }
             MenuOption::Settings => {}
             MenuOption::About => {
@@ -38,6 +32,10 @@ fn main() -> Result<()> {
             }
         }
     }
+
+    base::frame::draw_frame(&mut stdout);
+
+
     execute!(stdout, cursor::MoveTo(0,crossterm::terminal::size().unwrap().1))?;
     Ok(())
 }
