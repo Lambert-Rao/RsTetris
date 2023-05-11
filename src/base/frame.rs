@@ -1,3 +1,4 @@
+use std::collections::LinkedList;
 use crossterm::{cursor, queue, terminal, style, style::Print, style::Color, style::SetBackgroundColor, Command, Result, execute};
 use std::io::{Write, self};
 use std::thread::sleep;
@@ -44,7 +45,7 @@ pub fn draw_frame(out: &mut impl Write) -> io::Result<()> {
 
 type PointState = Option<Color>;
 struct Matrix {
-    data: Vec<Vec<PointState>>,
+    data: LinkedList<Vec<PointState>>,
     width: usize,
     height: usize,
 }

@@ -2,11 +2,12 @@ use crossterm::{cursor, queue, style, style::Color};
 use rand::Rng;
 use std::io::Write;
 use crossterm::style::Print;
+use super::constants::*;
+use crate::base::frame::draw_frame;
 
-type Matrix = [[bool; 4]; 4];
-type Info = ([Matrix; 4], Color, Color);
+type Info = ([[[u16; 2]; 4]; 4], Color, Color);
 
-
+#[derive(Copy, Clone)]
 enum TetrominoState {
     Up,
     Right,
@@ -29,216 +30,80 @@ pub struct Tetromino {
     block_type: TetrominoType,
     // 0,0 is the top left corner
     // x,y is the position of the top left
+    pos: [u16; 2],
+    last_state: TetrominoState,
+    last_pos: [u16; 2],
 }
 
 //const info
-impl Tetromino {
-    const I: Info = (
+impl TetrominoType {
+    //SRS
+    const I_INFO: Info = (
         [
-            [
-                [false, false, false, false],
-                [true, true, true, true],
-                [false, false, false, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, false, true, false],
-                [false, false, true, false],
-                [false, false, true, false],
-                [false, false, true, false],
-            ],
-            [
-                [false, false, false, false],
-                [false, false, false, false],
-                [true, true, true, true],
-                [false, false, false, false],
-            ],
-            [
-                [false, true, false, false],
-                [false, true, false, false],
-                [false, true, false, false],
-                [false, true, false, false],
-            ],
+            [[0, 1], [1, 1], [2, 1], [3, 1]],
+            [[2, 0], [2, 1], [2, 2], [2, 3]],
+            [[0, 2], [1, 2], [2, 2], [3, 2]],
+            [[1, 0], [1, 1], [1, 2], [1, 3]]
         ],
         Color::Rgb { r: 0, g: 240, b: 240 },
         Color::Rgb { r: 0, g: 160, b: 160 }
     );
-    const O: Info = (
+    const O_INFO: Info = (
         [
-            [
-                [false, false, false, false],
-                [false, true, true, false],
-                [false, true, true, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, false, false, false],
-                [false, true, true, false],
-                [false, true, true, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, false, false, false],
-                [false, true, true, false],
-                [false, true, true, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, false, false, false],
-                [false, true, true, false],
-                [false, true, true, false],
-                [false, false, false, false],
-            ],
+            [[1, 0], [2, 0], [1, 1], [2, 1]],
+            [[1, 0], [2, 0], [1, 1], [2, 1]],
+            [[1, 0], [2, 0], [1, 1], [2, 1]],
+            [[1, 0], [2, 0], [1, 1], [2, 1]]
         ],
         Color::Rgb { r: 240, g: 240, b: 0 },
         Color::Rgb { r: 160, g: 160, b: 0 }
     );
-    const J: Info = (
+    const J_INFO: Info = (
         [
-            [
-                [false, false, false, false],
-                [true, false, false, false],
-                [true, true, true, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, true, true, false],
-                [false, true, false, false],
-                [false, true, false, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, false, false, false],
-                [true, true, true, false],
-                [false, false, true, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, true, false, false],
-                [false, true, false, false],
-                [true, true, false, false],
-                [false, false, false, false],
-            ],
+            [[0, 0], [0, 1], [1, 1], [2, 1]],
+            [[1, 0], [2, 0], [1, 1], [1, 2]],
+            [[0, 1], [1, 1], [2, 1], [2, 2]],
+            [[1, 0], [1, 1], [0, 2], [1, 2]],
         ],
         Color::Rgb { r: 0, g: 0, b: 240 },
         Color::Rgb { r: 0, g: 0, b: 160 }
     );
-    const L: Info = (
+    const L_INFO: Info = (
         [
-            [
-                [false, false, false, false],
-                [false, false, true, false],
-                [true, true, true, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, true, false, false],
-                [false, true, false, false],
-                [false, true, true, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, false, false, false],
-                [true, true, true, false],
-                [true, false, false, false],
-                [false, false, false, false],
-            ],
-            [
-                [true, true, false, false],
-                [false, true, false, false],
-                [false, true, false, false],
-                [false, false, false, false],
-            ],
+            [[0, 1], [1, 1], [2, 1], [2, 0]],
+            [[1, 0], [1, 1], [1, 2], [2, 2]],
+            [[0, 2], [0, 1], [1, 1], [2, 1]],
+            [[0, 0], [1, 0], [1, 1], [1, 2]],
         ],
         Color::Rgb { r: 240, g: 160, b: 0 },
         Color::Rgb { r: 160, g: 120, b: 0 }
     );
-    const S: Info = (
+    const S_INFO: Info = (
         [
-            [
-                [false, false, false, false],
-                [false, true, true, false],
-                [true, true, false, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, true, false, false],
-                [false, true, true, false],
-                [false, false, true, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, false, false, false],
-                [false, true, true, false],
-                [true, true, false, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, true, false, false],
-                [false, true, true, false],
-                [false, false, true, false],
-                [false, false, false, false],
-            ],
+            [[1, 0], [2, 0], [0, 1], [1, 1]],
+            [[1, 0], [1, 1], [2, 1], [2, 2]],
+            [[1, 1], [2, 1], [0, 2], [1, 2]],
+            [[0, 0], [0, 1], [1, 1], [1, 2]]
         ],
         Color::Rgb { r: 0, g: 240, b: 0 },
         Color::Rgb { r: 0, g: 160, b: 0 }
     );
-    const T: Info = (
+    const T_INFO: Info = (
         [
-            [
-                [false, false, false, false],
-                [true, true, true, false],
-                [false, true, false, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, true, false, false],
-                [true, true, false, false],
-                [false, true, false, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, true, false, false],
-                [true, true, true, false],
-                [false, false, false, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, true, false, false],
-                [false, true, true, false],
-                [false, true, false, false],
-                [false, false, false, false],
-            ],
+            [[1, 0], [0, 1], [1, 1], [2, 1]],
+            [[1, 0], [1, 1], [2, 1], [1, 2]],
+            [[0, 1], [1, 1], [2, 1], [1, 2]],
+            [[1, 0], [0, 1], [1, 1], [1, 2]],
         ],
         Color::Rgb { r: 60, g: 0, b: 240 },
         Color::Rgb { r: 120, g: 0, b: 160 }
     );
-    const Z: Info = (
+    const Z_INFO: Info = (
         [
-            [
-                [false, false, false, false],
-                [true, true, false, false],
-                [false, true, true, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, false, true, false],
-                [false, true, true, false],
-                [false, true, false, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, false, false, false],
-                [true, true, false, false],
-                [false, true, true, false],
-                [false, false, false, false],
-            ],
-            [
-                [false, false, true, false],
-                [false, true, true, false],
-                [false, true, false, false],
-                [false, false, false, false],
-            ],
+            [[0, 0], [1, 0], [1, 1], [2, 1]],
+            [[2, 0], [1, 1], [2, 1], [1, 2]],
+            [[0, 1], [1, 1], [1, 2], [2, 2]],
+            [[1, 0], [0, 1], [1, 1], [0, 2]],
         ],
         Color::Rgb { r: 240, g: 0, b: 0 },
         Color::Rgb { r: 160, g: 0, b: 0 }
@@ -260,6 +125,9 @@ impl Tetromino {
         let new_tetromino = Tetromino {
             block_type: t_type,
             state: TetrominoState::Up,
+            last_state: TetrominoState::Up,
+            pos: [0, 0],
+            last_pos: NEXT_TIP_TETROMINO,
         };
         new_tetromino
     }
@@ -271,17 +139,32 @@ impl Tetromino {
             TetrominoState::Left => TetrominoState::Up,
         }
     }
-    //this draw takes 8*4 grid
-    pub fn draw(&self, out: &mut impl Write, pos: [u16; 2]) {
-        let info = match self.block_type {
-            TetrominoType::I => Tetromino::I,
-            TetrominoType::O => Tetromino::O,
-            TetrominoType::J => Tetromino::J,
-            TetrominoType::L => Tetromino::L,
-            TetrominoType::S => Tetromino::S,
-            TetrominoType::T => Tetromino::T,
-            TetrominoType::Z => Tetromino::Z,
-        };
+    pub fn shift(&mut self, direction: Direction) {
+        match direction {
+            Direction::Left => self.pos[0] -= 1,
+            Direction::Right => self.pos[0] += 1,
+            Direction::Down => self.pos[1] += 1,
+            _ => {}
+        }
+    }
+    pub fn set_last(&mut self) {
+        self.last_state = self.state;
+        self.last_pos = self.pos;
+    }
+    pub fn init_to_game(&mut self) {
+        self.pos = [0, 0];
+        self.last_pos = self.pos.clone();
+    }
+    pub fn reverse_back(&mut self) {
+        self.pos = self.last_pos;
+        self.state = self.last_state;
+    }
+    //this draw covers 8*4 grid
+    pub fn draw_itself(&self, out: &mut impl Write) {
+        self.draw_position(out, [GAME_AREA_POSITION[0] + self.pos[0] * 2, GAME_AREA_POSITION[1] + self.pos[1]]);
+    }
+    pub fn draw_position(&self, out: &mut impl Write, pos: [u16; 2]) {
+        let info = self.get_info();
         queue!(out,style::SetForegroundColor(info.1));
         let state_number = match self.state {
             TetrominoState::Up => 0,
@@ -290,13 +173,44 @@ impl Tetromino {
             TetrominoState::Left => 3,
         };
         for i in 0..4 {
-            for j in 0..4 {
-                if info.0[state_number][i][j] {
-                    queue!(out, cursor::MoveTo(pos[0] + (j*2) as u16, pos[1] + i as u16),Print("■ "));
-                }
-            }
+            queue!(out, cursor::MoveTo(pos[0] +2* info.0[state_number][i][0], pos[1] +info.0[state_number][i][1]),
+            style::Print('■'));
         }
         queue!(out,style::SetForegroundColor(Color::Reset));
         out.flush();
+    }
+    pub fn erase_last(&self, out: &mut impl Write) {
+        let info = self.get_info();
+        let state_number = match self.last_state {
+            TetrominoState::Up => 0,
+            TetrominoState::Right => 1,
+            TetrominoState::Down => 2,
+            TetrominoState::Left => 3,
+        };
+        for i in 0..4 {
+            queue!(out, cursor::MoveTo(GAME_AREA_POSITION[0]+
+                self.last_pos[0]*2+
+                2* info.0[state_number][i][0],
+                GAME_AREA_POSITION[1]+
+                self.last_pos[1]+
+                info.0[state_number][i][1]),
+            style::Print(" "));
+            // print!("{},{}" ,self.last_pos[0],self.last_pos[1])
+        }
+        out.flush();
+    }
+}
+
+impl Tetromino {
+    fn get_info(&self) -> Info {
+        match self.block_type {
+            TetrominoType::I => TetrominoType::I_INFO,
+            TetrominoType::O => TetrominoType::O_INFO,
+            TetrominoType::J => TetrominoType::J_INFO,
+            TetrominoType::L => TetrominoType::L_INFO,
+            TetrominoType::S => TetrominoType::S_INFO,
+            TetrominoType::T => TetrominoType::T_INFO,
+            TetrominoType::Z => TetrominoType::Z_INFO,
+        }
     }
 }
