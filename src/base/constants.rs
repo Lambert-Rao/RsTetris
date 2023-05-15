@@ -5,6 +5,6 @@ pub enum Direction {
     Down,
     Up,
 }
-pub const GAME_AREA_POSITION : [u16;2] = [3, 1];
+pub const GAME_AREA_POSITION : [u16;2] = [2, 1];
 //multiply 2 to make it looks like a square in the precision of rendering
 pub const GAME_AREA_SIZE : [u16;2] = [10,20];

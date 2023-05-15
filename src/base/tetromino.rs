@@ -5,6 +5,7 @@ use crossterm::style::Print;
 use super::constants::*;
 use crate::base::frame::draw_frame;
 
+//               shape          color       shadow color
 type Info = ([[[u16; 2]; 4]; 4], Color, Color);
 
 #[derive(Copy, Clone)]
@@ -198,6 +199,27 @@ impl Tetromino {
             // print!("{},{}" ,self.last_pos[0],self.last_pos[1])
         }
         out.flush();
+    }
+    pub fn points(&self) -> [[u16; 2]; 4] {
+        let info = self.get_info();
+        let state_number = match self.state {
+            TetrominoState::Up => 0,
+            TetrominoState::Right => 1,
+            TetrominoState::Down => 2,
+            TetrominoState::Left => 3,
+        };
+        let mut pos_set = [[0, 0]; 4];
+        for i in 0..4 {
+            pos_set[i] = [
+                self.pos[0] +
+                    info.0[state_number][i][0],
+                self.pos[1] +
+                    info.0[state_number][i][1]];
+        }
+        pos_set
+    }
+    pub fn color(&self) -> Color {
+        self.get_info().1
     }
 }
 

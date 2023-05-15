@@ -12,7 +12,7 @@ pub fn draw_frame(out: &mut impl Write) -> io::Result<()> {
         queue!(out, Print("🞐 ".to_string()))?;
     }
     queue!(out, cursor::MoveToNextLine(1))?;
-    for _ in 0..21 {
+    for _ in 0..20 {
         queue!(out,
         Print("🞐".to_string()),
             cursor::MoveToColumn(40),
@@ -43,9 +43,3 @@ pub fn draw_frame(out: &mut impl Write) -> io::Result<()> {
     Ok(())
 }
 
-type PointState = Option<Color>;
-struct Matrix {
-    data: LinkedList<Vec<PointState>>,
-    width: usize,
-    height: usize,
-}

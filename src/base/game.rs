@@ -3,10 +3,20 @@ use crate::base::tetromino::Tetromino;
 use super::frame;
 use std::collections::LinkedList;
 use std::thread::sleep;
+use super::constants::*;
 use crossterm::{queue, style::Print, cursor, execute, style, terminal, event::{self, KeyCode}};
 use crossterm::event::read;
 use crossterm::style::{Color, style};
-use crate::base::constants::Direction;
+use crate::base::constants::{Direction, GAME_AREA_SIZE};
+
+type PointState = Option<Color>;
+struct Matrix {
+    data: Vec<//20,num of rows
+        Vec<//10,num of cols
+            PointState>>,
+    width: u16,
+    height: u16,
+}
 
 enum GameMode {
     Normal
@@ -16,19 +26,25 @@ struct Game {
     mode: GameMode,
     difficulty: u8,
     queue: LinkedList<Tetromino>,
-    //Atomic
+    //todo: Atomic
     score: u64,
     current: Tetromino,
+    grid: Matrix,
 }
 
 impl Game {
     fn new(out: &mut impl Write, mode: GameMode, difficulty: u8) -> Game {
-        let n = Self {
+        let mut n = Self {
             mode,
             difficulty,
             queue: Default::default(),
             score: 0,
             current: Tetromino::new(),
+            grid: Matrix {
+                data: vec![vec![None; GAME_AREA_SIZE[0] as usize]; GAME_AREA_SIZE[1] as usize],
+                width: GAME_AREA_SIZE[0],
+                height: GAME_AREA_SIZE[1],
+            },
         };
         n
     }
@@ -85,6 +101,21 @@ impl Game {
         self.current.draw_itself(out);
     }
     fn move_tetromino_down(&mut self, out: &mut impl Write) {
+        let points = self.current.points();
+
+        //have been drawn to canvas in this loop if fused
+        for point in points.iter() {
+            print!("{:?}", point);
+            if point[1] == self.grid.height -1 {
+                print!("fuse");
+                self.fuse_tetromino(out);
+                return;
+            }
+            if self.grid.data[point[1] as usize + 1][point[0] as usize].is_some() {
+                self.fuse_tetromino(out);
+                return;
+            }
+        }
         self.current.shift(Direction::Down);
         self.current.erase_last(out);
         self.current.set_last();
@@ -118,6 +149,17 @@ impl Game {
     }
     fn draw_score(&self, out: &mut impl Write) {
         queue!(out,cursor::MoveTo(31,9),style::SetForegroundColor(Color::DarkYellow),Print(self.score),style::SetForegroundColor(Color::Reset));
+    }
+    fn fuse_tetromino(&mut self, out: &mut impl Write) {
+        self.current.erase_last(out);
+        self.current.set_last();
+        self.current.draw_itself(out);
+        let points = self.current.points();
+        for point in points.iter() {
+            print!("{:?}", point);
+            self.grid.data[point[1] as usize][point[0] as usize] = Some(self.current.color());
+        }
+        print!("fuse fin");
     }
 }
 
