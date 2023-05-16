@@ -1,9 +1,8 @@
-use std::fmt::Display;
 use std::io;
 use std::io::Write;
 use crossterm::*;
 use crossterm::style::{self, *};
-use crossterm::event::{self, *};
+use crossterm::event::{ *};
 
 
 const TITLE: &str =
@@ -51,7 +50,7 @@ pub fn select(out: &mut impl Write) -> io::Result<MenuOption> {
                 draw_menu(out, user_cursor)?;
             }
             Event::Key(KeyEvent {
-                           code: KeyCode::Enter | KeyCode::Char(' '),
+                           code: KeyCode::Enter | KeyCode::Char(' ')|KeyCode::Char('E')|KeyCode::Char('e'),
                            kind: KeyEventKind::Press,
                            ..
                        }) => {

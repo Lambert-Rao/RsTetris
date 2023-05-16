@@ -1,9 +1,7 @@
 use crossterm::{cursor, queue, style, style::Color};
 use rand::Rng;
-use std::io::Write;
-use crossterm::style::Print;
+use std::io::{Write,self};
 use super::constants::*;
-use crate::base::frame::draw_frame;
 
 //               shape          color       shadow color
 type Info = ([[[u16; 2]; 4]; 4], Color, Color);
@@ -16,6 +14,7 @@ enum TetrominoState {
     Left,
 }
 
+#[derive(Copy, Clone)]
 enum TetrominoType {
     I,
     O,
@@ -26,6 +25,7 @@ enum TetrominoType {
     L,
 }
 
+#[derive(Copy, Clone)]
 pub struct Tetromino {
     state: TetrominoState,
     block_type: TetrominoType,
@@ -71,9 +71,9 @@ impl TetrominoType {
     );
     const L_INFO: Info = (
         [
-            [[0, 1], [1, 1], [2, 1], [2, 0]],
+            [[2, 0], [0, 1], [1, 1], [2, 1]],
             [[1, 0], [1, 1], [1, 2], [2, 2]],
-            [[0, 2], [0, 1], [1, 1], [2, 1]],
+            [[0, 1], [1, 1], [2, 1], [0, 2]],
             [[0, 0], [1, 0], [1, 1], [1, 2]],
         ],
         Color::Rgb { r: 240, g: 160, b: 0 },
@@ -161,26 +161,38 @@ impl Tetromino {
         self.state = self.last_state;
     }
     //this draw covers 8*4 grid
-    pub fn draw_itself(&self, out: &mut impl Write) {
-        self.draw_position(out, [(GAME_AREA_POSITION[0] as i16 + self.pos[0] * 2) as u16, (GAME_AREA_POSITION[1] as i16 + self.pos[1]) as u16]);
+    pub fn draw_itself(&self, out: &mut impl Write)-> io::Result<()> {
+        self.draw_position(out, [(GAME_AREA_POSITION[0] as i16 + self.pos[0] * 2) as u16, (GAME_AREA_POSITION[1] as i16 + self.pos[1]) as u16], false)?;Ok(())
     }
-    pub fn draw_position(&self, out: &mut impl Write, pos: [u16; 2]) {
+    pub fn draw_position(&self, out: &mut impl Write, pos: [u16; 2], shadow: bool)-> io::Result<()> {
         let info = self.get_info();
-        queue!(out,style::SetForegroundColor(info.1));
+        if shadow {
+            queue!(out,style::SetForegroundColor(info.2))?;
+        } else {
+            queue!(out,style::SetForegroundColor(info.1))?;
+        }
         let state_number = match self.state {
             TetrominoState::Up => 0,
             TetrominoState::Right => 1,
             TetrominoState::Down => 2,
             TetrominoState::Left => 3,
         };
-        for i in 0..4 {
-            queue!(out, cursor::MoveTo(pos[0] +2* info.0[state_number][i][0], pos[1] +info.0[state_number][i][1]),
-            style::Print('■'));
+        if shadow {
+            for i in 0..4 {
+                queue!(out, cursor::MoveTo(pos[0] +2* info.0[state_number][i][0], pos[1] +info.0[state_number][i][1]),
+            style::Print('□'))?;
+            }
+        } else {
+            for i in 0..4 {
+                queue!(out, cursor::MoveTo(pos[0] +2* info.0[state_number][i][0], pos[1] +info.0[state_number][i][1]),
+            style::Print('■'))?;
+            }
         }
-        queue!(out,style::SetForegroundColor(Color::Reset));
-        out.flush();
+        queue!(out,style::SetForegroundColor(Color::Reset))?;
+        out.flush()?;
+        Ok(())
     }
-    pub fn erase_last(&self, out: &mut impl Write) {
+    pub fn erase_last(&self, out: &mut impl Write)->io::Result<()> {
         let info = self.get_info();
         let state_number = match self.last_state {
             TetrominoState::Up => 0,
@@ -195,10 +207,11 @@ impl Tetromino {
                 (GAME_AREA_POSITION[1]as i16+
                 self.last_pos[1]+
                 info.0[state_number][i][1]as i16)as u16),
-            style::Print(" "));
+            style::Print(" "))?;
             // print!("{},{}" ,self.last_pos[0],self.last_pos[1])
         }
-        out.flush();
+        out.flush()?;
+        Ok(())
     }
     pub fn points(&self) -> [[i16; 2]; 4] {
         let info = self.get_info();

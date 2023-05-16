@@ -1,7 +1,7 @@
 use std::io::{self,Write};
-use std::thread::sleep;
 use crossterm::{*};
 use crossterm::event::read;
+use crossterm::style::Print;
 
 pub fn about(out:&mut impl Write) -> io::Result<()>{
     //clear screen
@@ -17,11 +17,11 @@ pub fn about(out:&mut impl Write) -> io::Result<()>{
     for i in 0..5 {
         queue!(out,Print(INFO[i][0]),cursor::MoveToColumn(20))?;
         queue!(out,Print(INFO[i][1]),)?;
-        queue!(out,cursor::MoveToNextLine(2),cursor::MoveToColumn(4));
+        queue!(out,cursor::MoveToNextLine(2),cursor::MoveToColumn(4))?;
     }
 
 
-    out.flush();
+    out.flush()?;
 
     terminal::enable_raw_mode()?;
     read()?;
@@ -29,8 +29,7 @@ pub fn about(out:&mut impl Write) -> io::Result<()>{
     execute!(out, cursor::MoveTo(0,crossterm::terminal::size().unwrap().1))?;
     Ok(())
 }
-use std::collections::HashMap;
-use crossterm::style::Print;
+
 
 const INFO: [[&str;2];5] = [
     ["Version", "𝕧 𝟘.𝟙.𝟘"],
