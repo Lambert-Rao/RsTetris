@@ -31,9 +31,9 @@ pub struct Tetromino {
     block_type: TetrominoType,
     // 0,0 is the top left corner
     // x,y is the position of the top left
-    pos: [u16; 2],
+    pos: [i16; 2],
     last_state: TetrominoState,
-    last_pos: [u16; 2],
+    last_pos: [i16; 2],
 }
 
 //const info
@@ -128,7 +128,7 @@ impl Tetromino {
             state: TetrominoState::Up,
             last_state: TetrominoState::Up,
             pos: [0, 0],
-            last_pos: NEXT_TIP_TETROMINO,
+            last_pos: INIT_LAST_POS,
         };
         new_tetromino
     }
@@ -162,7 +162,7 @@ impl Tetromino {
     }
     //this draw covers 8*4 grid
     pub fn draw_itself(&self, out: &mut impl Write) {
-        self.draw_position(out, [GAME_AREA_POSITION[0] + self.pos[0] * 2, GAME_AREA_POSITION[1] + self.pos[1]]);
+        self.draw_position(out, [(GAME_AREA_POSITION[0] as i16 + self.pos[0] * 2) as u16, (GAME_AREA_POSITION[1] as i16 + self.pos[1]) as u16]);
     }
     pub fn draw_position(&self, out: &mut impl Write, pos: [u16; 2]) {
         let info = self.get_info();
@@ -189,18 +189,18 @@ impl Tetromino {
             TetrominoState::Left => 3,
         };
         for i in 0..4 {
-            queue!(out, cursor::MoveTo(GAME_AREA_POSITION[0]+
-                self.last_pos[0]*2+
-                2* info.0[state_number][i][0],
-                GAME_AREA_POSITION[1]+
+            queue!(out, cursor::MoveTo((GAME_AREA_POSITION[0]as i16+
+               self.last_pos[0]*2+
+                2* info.0[state_number][i][0]as i16)as u16,
+                (GAME_AREA_POSITION[1]as i16+
                 self.last_pos[1]+
-                info.0[state_number][i][1]),
+                info.0[state_number][i][1]as i16)as u16),
             style::Print(" "));
             // print!("{},{}" ,self.last_pos[0],self.last_pos[1])
         }
         out.flush();
     }
-    pub fn points(&self) -> [[u16; 2]; 4] {
+    pub fn points(&self) -> [[i16; 2]; 4] {
         let info = self.get_info();
         let state_number = match self.state {
             TetrominoState::Up => 0,
@@ -212,9 +212,9 @@ impl Tetromino {
         for i in 0..4 {
             pos_set[i] = [
                 self.pos[0] +
-                    info.0[state_number][i][0],
+                    info.0[state_number][i][0] as i16,
                 self.pos[1] +
-                    info.0[state_number][i][1]];
+                    info.0[state_number][i][1] as i16];
         }
         pos_set
     }

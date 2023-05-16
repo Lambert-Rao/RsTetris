@@ -1,4 +1,5 @@
 pub const NEXT_TIP_TETROMINO : [u16;2] = [26, 2];
+pub const INIT_LAST_POS: [i16;2] = [12,1];
 pub enum Direction {
     Left,
     Right,

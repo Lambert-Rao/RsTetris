@@ -10,6 +10,7 @@ use crossterm::style::{Color, style};
 use crate::base::constants::{Direction, GAME_AREA_SIZE};
 
 type PointState = Option<Color>;
+
 struct Matrix {
     data: Vec<//20,num of rows
         Vec<//10,num of cols
@@ -61,30 +62,36 @@ impl Game {
             self.draw_score(out);
             self.set_new_tetromino(out);
             out.flush();
-            loop{match read().expect("can not read event") {
-                event::Event::Key(key_event) => {
-                    match key_event.code {
-                        KeyCode::Esc => {
-                            terminal::disable_raw_mode();
-                            break 'new_tetromino
+            'event: loop {
+                match read().expect("can not read event") {
+                    event::Event::Key(key_event) => {
+                        match key_event.code {
+                            KeyCode::Esc => {
+                                terminal::disable_raw_mode();
+                                break 'new_tetromino;
+                            }
+                            KeyCode::Left | KeyCode::Char('a' | 'A') => {
+                                if self.move_tetromino_left(out) == false
+                                { continue 'event; }
+                            }
+                            KeyCode::Right | KeyCode::Char('d' | 'D') => {
+                                if self.move_tetromino_right(out) == false
+                                { continue 'event; }
+                            }
+                            KeyCode::Up | KeyCode::Char('w' | 'W') => {
+                                if self.rotate_tetromino(out) == false
+                                { continue 'event; }
+                            }
+                            KeyCode::Down | KeyCode::Char('s' | 'S') => {
+                                if self.move_tetromino_down(out) == false
+                                { break 'event; }
+                            }
+                            _ => {}
                         }
-                        KeyCode::Left|KeyCode::Char('a'|'A') => {
-                            self.move_tetromino_left(out);
-                        }
-                        KeyCode::Right|KeyCode::Char('d'|'D') => {
-                            self.move_tetromino_right(out);
-                        }
-                        KeyCode::Up|KeyCode::Char('w'|'W') => {
-                            self.rotate_tetromino(out);
-                        }
-                        KeyCode::Down|KeyCode::Char('s'|'S') => {
-                            self.move_tetromino_down(out);
-                        }
-                        _ => {}
                     }
+                    _ => {}
                 }
-                _ => {}
-            }}
+            }
 
 
             if (false) {
@@ -100,44 +107,68 @@ impl Game {
         self.current.init_to_game();
         self.current.draw_itself(out);
     }
-    fn move_tetromino_down(&mut self, out: &mut impl Write) {
+    //true: can move. false: fuse
+    fn move_tetromino_down(&mut self, out: &mut impl Write) -> bool {
         let points = self.current.points();
 
         //have been drawn to canvas in this loop if fused
         for point in points.iter() {
-            print!("{:?}", point);
-            if point[1] == self.grid.height -1 {
-                print!("fuse");
+            if point[1] as u16 == self.grid.height - 1 {
                 self.fuse_tetromino(out);
-                return;
+                return false;
             }
             if self.grid.data[point[1] as usize + 1][point[0] as usize].is_some() {
                 self.fuse_tetromino(out);
-                return;
+                return false;
             }
         }
         self.current.shift(Direction::Down);
         self.current.erase_last(out);
         self.current.set_last();
         self.current.draw_itself(out);
+        true
     }
-    fn move_tetromino_left(&mut self, out: &mut impl Write) {
+    //true: can move; false: can't move
+    fn move_tetromino_left(&mut self, out: &mut impl Write) -> bool {
+        let points = self.current.points();
+        for point in points.iter() {
+            if point[0] == 0 || self.grid.data[point[1] as usize][point[0] as usize - 1].is_some() {
+                return false;
+            }
+        }
         self.current.shift(Direction::Left);
         self.current.erase_last(out);
         self.current.set_last();
         self.current.draw_itself(out);
+        true
     }
-    fn move_tetromino_right(&mut self, out: &mut impl Write) {
+    fn move_tetromino_right(&mut self, out: &mut impl Write) -> bool {
+        let points = self.current.points();
+        for point in points.iter() {
+            if point[0] as u16 == self.grid.width  - 1 || self.grid.data[point[1] as usize][point[0] as usize + 1].is_some() {
+                return false;
+            }
+        }
         self.current.shift(Direction::Right);
         self.current.erase_last(out);
         self.current.set_last();
         self.current.draw_itself(out);
+        true
     }
-    fn rotate_tetromino(&mut self, out: &mut impl Write) {
+    //TODO: kick wall, now can't rotate
+    fn rotate_tetromino(&mut self, out: &mut impl Write) -> bool {
         self.current.rotate();
+        let points = self.current.points();
+        for point in points.iter() {
+            if point[0] as u16 >= self.grid.width || point[1] as u16 >= self.grid.height || self.grid.data[point[1] as usize][point[0] as usize].is_some() {
+                self.current.reverse_back();
+                return false;
+            }
+        }
         self.current.erase_last(out);
         self.current.set_last();
         self.current.draw_itself(out);
+        true
     }
 }
 
@@ -156,10 +187,10 @@ impl Game {
         self.current.draw_itself(out);
         let points = self.current.points();
         for point in points.iter() {
-            print!("{:?}", point);
+            // print!("{:?}", point);
             self.grid.data[point[1] as usize][point[0] as usize] = Some(self.current.color());
         }
-        print!("fuse fin");
+        // print!("fuse fin");
     }
 }
 
