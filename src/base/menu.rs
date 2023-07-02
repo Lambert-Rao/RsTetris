@@ -30,7 +30,7 @@ pub fn select(out: &mut impl Write) -> io::Result<MenuOption> {
     loop {
         match read()? {
             Event::Key(KeyEvent {
-                           code: KeyCode::Char('w') | KeyCode::Char('W') | KeyCode::Up,
+                           code: KeyCode::Char('w') | KeyCode::Char('W') | KeyCode::Up | KeyCode::Char('k') | KeyCode::Char('K'),
                            kind: KeyEventKind::Press,
                            ..
                        }) => {
@@ -40,7 +40,7 @@ pub fn select(out: &mut impl Write) -> io::Result<MenuOption> {
                 draw_menu(out, user_cursor)?;
             }
             Event::Key(KeyEvent {
-                           code: KeyCode::Char('s') | KeyCode::Char('S') | KeyCode::Down,
+                           code: KeyCode::Char('s') | KeyCode::Char('S') | KeyCode::Down | KeyCode::Char('j') | KeyCode::Char('J'),
                            kind: KeyEventKind::Press,
                            ..
                        }) => {
@@ -141,11 +141,11 @@ fn draw_menu_frame(out: &mut impl Write) -> io::Result<()>{
 
 fn draw_menu (out: &mut impl Write,opt:u8) -> io::Result<()>{
     //Menu
-    queue!(out,cursor::MoveTo(15,15))?;
+    queue!(out,cursor::MoveTo(15,15),style::SetForegroundColor(Color::Reset))?;
     for i in 0..MenuOption::MENU_STR.len() {
         if i == opt as usize {
             queue!(out,style::SetForegroundColor(Color::Red), Print("🞂\t"),Print(MenuOption::MENU_STR[i]), cursor::MoveDown(3),cursor::MoveToColumn(15),
-            style::SetForegroundColor(Color::Black),)?;
+            style::SetForegroundColor(Color::Reset),)?;
         }
         else {
             queue!(out, Print("🞅\t"),Print(MenuOption::MENU_STR[i]), cursor::MoveDown(3),cursor::MoveToColumn(15))?;

@@ -73,19 +73,19 @@ impl Game {
                                 terminal::disable_raw_mode()?;
                                 break 'new_tetromino;
                             }
-                            KeyCode::Left | KeyCode::Char('a' | 'A') => {
+                            KeyCode::Left | KeyCode::Char('a' | 'A' | 'h' |'H') => {
                                 if self.move_tetromino_left(out).unwrap() == false
                                 { continue 'event; }
                             }
-                            KeyCode::Right | KeyCode::Char('d' | 'D') => {
+                            KeyCode::Right | KeyCode::Char('d' | 'D' |'l'|'L') => {
                                 if self.move_tetromino_right(out).unwrap() == false
                                 { continue 'event; }
                             }
-                            KeyCode::Up | KeyCode::Char('w' | 'W') => {
+                            KeyCode::Up | KeyCode::Char('w' | 'W'|'k'|'K') => {
                                 if self.rotate_tetromino(out).unwrap() == false
                                 { continue 'event; }
                             }
-                            KeyCode::Down | KeyCode::Char('s' | 'S') => {
+                            KeyCode::Down | KeyCode::Char('s' | 'S'|'J'|'j') => {
                                 if self.move_tetromino_down(out).unwrap() == false
                                 { break 'event; }
                             }
