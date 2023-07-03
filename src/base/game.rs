@@ -4,7 +4,7 @@ use super::frame;
 use std::collections::LinkedList;
 use std::io;
 use super::constants::*;
-use crossterm::{queue, style::Print, cursor,  style, terminal, event::{self, KeyCode}};
+use crossterm::{queue, style::Print, cursor, style, terminal, event::{self, KeyCode}};
 use crossterm::event::read;
 use crossterm::style::{Color};
 use crate::base::constants::{Direction, GAME_AREA_SIZE};
@@ -29,6 +29,8 @@ struct Game {
     queue: LinkedList<Tetromino>,
     //todo: Atomic
     score: u64,
+    //In a graphic terminal?
+    display: bool,
     current: Tetromino,
     shadow: Tetromino,
     grid: Matrix,
@@ -49,6 +51,10 @@ impl Game {
                 height: GAME_AREA_SIZE[1],
             },
             shadow: Tetromino::new(),
+            display: match std::env::var("DISPLAY") {
+                Ok(_) => true,
+                Err(_) => false,
+            },
         };
         n
     }
@@ -68,27 +74,52 @@ impl Game {
             'event: loop {
                 match read().expect("can not read event") {
                     event::Event::Key(key_event) => {
-                        match key_event.code {
-                            KeyCode::Esc => {
+                        match key_event {
+                            event::KeyEvent {
+                                code: KeyCode::Esc,
+                                ..
+                            } => {
                                 terminal::disable_raw_mode()?;
                                 break 'new_tetromino;
                             }
-                            KeyCode::Left | KeyCode::Char('a' | 'A' | 'h' |'H') => {
+                            event::KeyEvent {
+                                code: KeyCode::Left | KeyCode::Char('a' | 'A' | 'h' | 'H'),
+                                ..
+                            } => {
                                 if self.move_tetromino_left(out).unwrap() == false
                                 { continue 'event; }
                             }
-                            KeyCode::Right | KeyCode::Char('d' | 'D' |'l'|'L') => {
+                            event::KeyEvent {
+                                code: KeyCode::Right | KeyCode::Char('d' | 'D' | 'l' | 'L'),
+                                ..
+                            } => {
                                 if self.move_tetromino_right(out).unwrap() == false
                                 { continue 'event; }
                             }
-                            KeyCode::Up | KeyCode::Char('w' | 'W'|'k'|'K') => {
+                            event::KeyEvent {
+                                code: KeyCode::Up | KeyCode::Char('w' | 'W' | 'K' | 'k'),
+                                ..
+                            } => {
                                 if self.rotate_tetromino(out).unwrap() == false
                                 { continue 'event; }
                             }
-                            KeyCode::Down | KeyCode::Char('s' | 'S'|'J'|'j') => {
+                            event::KeyEvent {
+                                code: KeyCode::Down | KeyCode::Char('s' | 'S' | 'j' | 'J'),
+                                modifiers: event::KeyModifiers::NONE,
+                                ..
+                            } => {
                                 if self.move_tetromino_down(out).unwrap() == false
                                 { break 'event; }
                             }
+                            event::KeyEvent {
+                                code: KeyCode::Down | KeyCode::Char('s' | 'S' | 'j' | 'J'),
+                                modifiers: event::KeyModifiers::SHIFT,
+                                ..
+                            } => {
+                                if self.move_tetromino_down(out).unwrap() == false
+                                { break 'event; }
+                            }
+
                             _ => {}
                         }
                     }
@@ -110,7 +141,7 @@ impl Game {
 
 //tetromino funcs
 impl Game {
-    fn set_new_tetromino(&mut self, out: &mut impl Write)->io::Result<()>{
+    fn set_new_tetromino(&mut self, out: &mut impl Write) -> io::Result<()> {
         self.current.init_to_game();
         self.current.draw_itself(out)?;
         Ok(())
@@ -164,7 +195,7 @@ impl Game {
         Ok(true)
     }
     //TODO: kick wall, now can't rotate
-    fn rotate_tetromino(&mut self, out: &mut impl Write) -> Result<bool,io::Error> {
+    fn rotate_tetromino(&mut self, out: &mut impl Write) -> Result<bool, io::Error> {
         self.current.rotate();
         let points = self.current.points();
         for point in points.iter() {
@@ -185,13 +216,14 @@ impl Game {
     fn draw_next_tip(&self, out: &mut impl Write) -> io::Result<()> {
         let &next = &self.queue.front().unwrap();
         self.current.erase_last(out)?;
-        next.draw_position(out, super::constants::NEXT_TIP_TETROMINO, false)?;
+        next.draw_position(out, super::constants::NEXT_TIP_POS, false)?;
         Ok(())
     }
     fn draw_score(&self, out: &mut impl Write) -> io::Result<()> {
         queue!(out,cursor::MoveTo(31,9),style::SetForegroundColor(Color::DarkYellow),Print(self.score),style::SetForegroundColor(Color::Reset))?;
         Ok(())
     }
+    //fuse and draw
     fn fuse_tetromino(&mut self, out: &mut impl Write) -> io::Result<()> {
         self.current.erase_last(out)?;
         self.current.set_last();
@@ -263,7 +295,7 @@ impl Game {
 }
 
 
-pub fn start(out: &mut impl Write)->io::Result<()> {
+pub fn start(out: &mut impl Write) -> io::Result<()> {
     let mut game_instance = Game::new(GameMode::Normal, 0);
     frame::draw_frame(out)?;
     game_instance.game_loop(out)?;

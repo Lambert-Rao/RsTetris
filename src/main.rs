@@ -4,8 +4,6 @@ use std::io::{stdout};
 mod base;
 
 
-
-
 fn main() -> Result<()> {
     let mut stdout = stdout();
     loop
