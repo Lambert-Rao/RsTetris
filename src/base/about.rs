@@ -1,13 +1,13 @@
-use std::io::{self,Write};
+use std::io::{self, Write};
 use crossterm::{*};
 use crossterm::event::read;
 use crossterm::style::Print;
 
-pub fn about(out:&mut impl Write) -> io::Result<()>{
+pub fn about(out: &mut impl Write) -> io::Result<()> {
     //clear screen
     execute!(out,cursor::MoveTo(2,10))?;
-    for _ in 0..24{
-        for _ in 0..66{
+    for _ in 0..24 {
+        for _ in 0..66 {
             queue!(out,style::Print(" "))?;
         }
         queue!(out,cursor::MoveToNextLine(1),cursor::MoveToColumn(2))?;
@@ -15,8 +15,8 @@ pub fn about(out:&mut impl Write) -> io::Result<()>{
 
     queue!(out,cursor::MoveTo(4,13))?;
     for i in 0..5 {
-        queue!(out,Print(INFO[i][0]),cursor::MoveToColumn(20))?;
-        queue!(out,Print(INFO[i][1]),)?;
+        queue!(out,Print(INFO()[i][0]),cursor::MoveToColumn(20))?;
+        queue!(out,Print(INFO()[i][1]),)?;
         queue!(out,cursor::MoveToNextLine(2),cursor::MoveToColumn(4))?;
     }
 
@@ -31,10 +31,21 @@ pub fn about(out:&mut impl Write) -> io::Result<()>{
 }
 
 
-const INFO: [[&str;2];5] = [
-    ["Version", "𝕧 𝟘.𝟙.𝟘"],
-    ["Author", "𝕃𝕒𝕞𝕓𝕖𝕣𝕥 ℝ𝕒𝕠"],
-    ["License", "𝕄𝕀𝕋 𝕃𝕚𝕔𝕖𝕟𝕤𝕖"],
-    ["Dependency", "ᴄʀᴏꜱꜱᴛᴇʀᴍ  ʀᴀɴᴅ"],
-    ["Repository", "https://github.com/Lambert-Rao/RsTetris"],
-];
+fn INFO() -> [[ &'static str; 2]; 5] {
+    match std::env::var("DISPLAY") {
+        Ok(_) => [
+            ["Version", "𝕧 𝟘.𝟙.𝟙"],
+            ["Author", "𝕃𝕒𝕞𝕓𝕖𝕣𝕥 ℝ𝕒𝕠"],
+            ["License", "𝕄𝕀𝕋 𝕃𝕚𝕔𝕖𝕟𝕤𝕖"],
+            ["Dependency", "ᴄʀᴏꜱꜱᴛᴇʀᴍ  ʀᴀɴᴅ"],
+            ["Repository", "https://github.com/Lambert-Rao/RsTetris"],
+        ],
+        Err(_) => [
+            ["Version", "v 0.1.1"],
+            ["Author", "Lambert Rao"],
+            ["License", "MIT LICENSE"],
+            ["Dependency", "CROSSTERM  RAND"],
+            ["Repository", "https://github.com/Lambert-Rao/RsTetris"],
+            ],
+    }
+}

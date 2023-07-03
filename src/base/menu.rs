@@ -44,7 +44,7 @@ pub fn select(out: &mut impl Write) -> io::Result<MenuOption> {
                            kind: KeyEventKind::Press,
                            ..
                        }) => {
-                if user_cursor < (MenuOption::MENU_STR.len() - 1) as u8 {
+                if user_cursor < (MenuOption::MENU_STR().len() - 1) as u8 {
                     user_cursor += 1;
                 }
                 draw_menu(out, user_cursor)?;
@@ -120,7 +120,12 @@ pub enum MenuOption {
 }
 
 impl MenuOption {
-    const MENU_STR: [&'static str; 4] = ["𝔾𝕒𝕞𝕖 𝕊𝕥𝕒𝕣𝕥", "𝕊𝕖𝕥𝕥𝕚𝕟𝕘𝕤", "𝔸𝕓𝕠𝕦𝕥", "ℚ𝕦𝕚𝕥"];
+    fn MENU_STR() -> [&'static str; 4] {
+        match  std::env::var("DISPLAY") {
+            Err(_) => ["Game Start", "Settings", "About", "Quit"],
+            Ok(_) => ["𝔾𝕒𝕞𝕖 𝕊𝕥𝕒𝕣𝕥", "𝕊𝕖𝕥𝕥𝕚𝕟𝕘𝕤", "𝔸𝕓𝕠𝕦𝕥", "ℚ𝕦𝕚𝕥"],
+        }
+    }
 }
 
 fn draw_menu_frame(out: &mut impl Write) -> io::Result<()>{
@@ -142,13 +147,13 @@ fn draw_menu_frame(out: &mut impl Write) -> io::Result<()>{
 fn draw_menu (out: &mut impl Write,opt:u8) -> io::Result<()>{
     //Menu
     queue!(out,cursor::MoveTo(15,15),style::SetForegroundColor(Color::Reset))?;
-    for i in 0..MenuOption::MENU_STR.len() {
+    for i in 0..MenuOption::MENU_STR().len() {
         if i == opt as usize {
-            queue!(out,style::SetForegroundColor(Color::Red), Print("🞂\t"),Print(MenuOption::MENU_STR[i]), cursor::MoveDown(3),cursor::MoveToColumn(15),
+            queue!(out,style::SetForegroundColor(Color::Red), Print("🞂\t"),Print(MenuOption::MENU_STR()[i]), cursor::MoveDown(3),cursor::MoveToColumn(15),
             style::SetForegroundColor(Color::Reset),)?;
         }
         else {
-            queue!(out, Print("🞅\t"),Print(MenuOption::MENU_STR[i]), cursor::MoveDown(3),cursor::MoveToColumn(15))?;
+            queue!(out, Print("🞅\t"),Print(MenuOption::MENU_STR()[i]), cursor::MoveDown(3),cursor::MoveToColumn(15))?;
         }
     }
     execute!(out, cursor::MoveTo(0,crossterm::terminal::size().unwrap().1))?;
