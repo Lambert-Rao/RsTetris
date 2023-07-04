@@ -1,12 +1,14 @@
+use std::fmt::Debug;
 use crossterm::{cursor, queue, style, style::Color};
 use rand::Rng;
 use std::io::{Write,self};
+use std::process::Termination;
 use super::constants::*;
 
 //               shape          color       shadow color
 type Info = ([[[u16; 2]; 4]; 4], Color, Color);
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone,Debug)]
 enum TetrominoState {
     Up,
     Right,
@@ -14,7 +16,7 @@ enum TetrominoState {
     Left,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone,Debug)]
 enum TetrominoType {
     I,
     O,
@@ -36,6 +38,17 @@ pub struct Tetromino {
     last_pos: [i16; 2],
 }
 
+impl Debug for Tetromino {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Tetromino")
+            .field("state", &self.state)
+            .field("block_type", &self.block_type)
+            .field("pos", &self.pos)
+            .field("last_state", &self.last_state)
+            .field("last_pos", &self.last_pos)
+            .finish()
+    }
+}
 //const info
 impl TetrominoType {
     //SRS
@@ -141,6 +154,7 @@ impl Tetromino {
         }
     }
     pub fn shift(&mut self, direction: Direction) {
+        //print!("{:?}", direction);
         match direction {
             Direction::Left => self.pos[0] -= 1,
             Direction::Right => self.pos[0] += 1,
@@ -162,7 +176,12 @@ impl Tetromino {
     }
     //this draw covers 8*4 grid
     pub fn draw_itself(&self, out: &mut impl Write)-> io::Result<()> {
-        self.draw_position(out, [(GAME_AREA_POSITION[0] as i16 + self.pos[0] * 2) as u16, (GAME_AREA_POSITION[1] as i16 + self.pos[1]) as u16], false)?;Ok(())
+        self.draw_position(out, [(GAME_AREA_POSITION[0] as i16 + self.pos[0] * 2) as u16, (GAME_AREA_POSITION[1] as i16 + self.pos[1]) as u16], false)?;
+        {
+            print!("{:?}", self.points());
+            out.flush();
+        }
+        Ok(())
     }
     pub fn draw_position(&self, out: &mut impl Write, pos: [u16; 2], shadow: bool)-> io::Result<()> {
         let info = self.get_info();
@@ -184,6 +203,7 @@ impl Tetromino {
             }
         } else {
             for i in 0..4 {
+                println!("{:?}|{:?}", pos[0] +2* info.0[state_number][i][0], pos[1] +info.0[state_number][i][1]);
                 queue!(out, cursor::MoveTo(pos[0] +2* info.0[state_number][i][0], pos[1] +info.0[state_number][i][1]),
             style::Print('■'))?;
             }

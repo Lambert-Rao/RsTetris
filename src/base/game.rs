@@ -72,7 +72,7 @@ impl Game {
             self.set_new_tetromino(out)?;
             out.flush()?;
             'event: loop {
-                match read().expect("can not read event") {
+                 match read().expect("can not read event") {
                     event::Event::Key(key_event) => {
                         match key_event {
                             event::KeyEvent {
@@ -162,6 +162,8 @@ impl Game {
             }
         }
         self.current.shift(Direction::Down);
+        //print!("{:?}", self.current.points());
+        //erase first, then set
         self.current.erase_last(out)?;
         self.current.set_last();
         self.current.draw_itself(out)?;
@@ -170,8 +172,10 @@ impl Game {
     //true: can move; false: can't move
     fn move_tetromino_left(&mut self, out: &mut impl Write) -> Result<bool, io::Error> {
         let points = self.current.points();
+        //print!("{:?}", points);
+
         for point in points.iter() {
-            if point[0] == 0 || self.grid.data[point[1] as usize][point[0] as usize - 1].is_some() {
+            if point[0] == 0 || self .grid.data[point[1] as usize][point[0] as usize - 1].is_some() {
                 return Ok(false);
             }
         }
