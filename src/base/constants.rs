@@ -1,5 +1,6 @@
 pub const NEXT_TIP_POS: [u16;2] = [26, 2];
 pub const INIT_LAST_POS: [i16;2] = [12,1];
+#[derive(Debug, Clone, Copy)]
 pub enum Direction {
     Left,
     Right,
