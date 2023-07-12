@@ -36,7 +36,7 @@ pub fn draw_frame(out: &mut impl Write) -> io::Result<()> {
         queue!(out,Print("🞐 ".to_string()))?;
     }
     queue!(out,cursor::MoveTo(24,9),style::SetForegroundColor(Color::DarkYellow),Print("Score:"))?;
-    queue!(out,style::SetForegroundColor(Color::Reset));
+    queue!(out,style::SetForegroundColor(Color::Reset))?;
     out.flush()?;
     execute!(out, cursor::MoveTo(0,crossterm::terminal::size().unwrap().1))?;
     Ok(())

@@ -2,8 +2,8 @@ use std::fmt::Debug;
 use crossterm::{cursor, queue, style, style::Color};
 use rand::Rng;
 use std::io::{Write,self};
-use std::process::Termination;
 use super::constants::*;
+use super::super::debug::debugger::log;
 
 //               shape          color       shadow color
 type Info = ([[[u16; 2]; 4]; 4], Color, Color);
@@ -178,8 +178,8 @@ impl Tetromino {
     pub fn draw_itself(&self, out: &mut impl Write)-> io::Result<()> {
         self.draw_position(out, [(GAME_AREA_POSITION[0] as i16 + self.pos[0] * 2) as u16, (GAME_AREA_POSITION[1] as i16 + self.pos[1]) as u16], false)?;
         {
-            print!("{:?}", self.points());
-            out.flush();
+            //print!("{:?}", self.points());
+            out.flush()?;
         }
         Ok(())
     }
@@ -203,8 +203,8 @@ impl Tetromino {
             }
         } else {
             for i in 0..4 {
-                println!("{:?}|{:?}", pos[0] +2* info.0[state_number][i][0], pos[1] +info.0[state_number][i][1]);
-                queue!(out, cursor::MoveTo(pos[0] +2* info.0[state_number][i][0], pos[1] +info.0[state_number][i][1]),
+                log(&format!("{:?}|{:?}\n", (pos[0] as i16 +2* info.0[state_number][i][0] as i16)as u16,( pos[1] as i16 +info.0[state_number][i][1] as i16)as u16));
+                queue!(out, cursor::MoveTo((pos[0] as i16 +2* info.0[state_number][i][0] as i16)as u16,( pos[1] as i16 +info.0[state_number][i][1] as i16)as u16),
             style::Print('■'))?;
             }
         }
