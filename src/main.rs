@@ -2,6 +2,7 @@ use crossterm::{cursor, execute, Result};
 use std::io::{stdout};
 
 mod base;
+mod debug;
 
 
 fn main() -> Result<()> {
@@ -27,4 +28,5 @@ fn main() -> Result<()> {
             }
         }
     }
+
 }
